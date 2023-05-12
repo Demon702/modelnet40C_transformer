@@ -15,3 +15,4 @@ from .pointmlp import pointMLP
 from .pointmlp2 import pointMLP2
 from .curvenet import CurveNet
 from .gdanet import GDANET
+from .pointTransformerv1 import PointTransformerCls as PTV1
