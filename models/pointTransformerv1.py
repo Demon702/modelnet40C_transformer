@@ -206,7 +206,7 @@ class TransformerBlock(nn.Module):
     
 
 class Backbone(nn.Module):
-    def __init__(self, cfg):
+    def __init__(self):
         super().__init__()
         # npoints, nblocks, nneighbor, n_c, d_points = cfg.num_point, cfg.model.nblocks, cfg.model.nneighbor, cfg.num_class, cfg.input_dim
         npoints, nblocks, nneighbor, n_c, d_points = 1024, 4, 16, 40, 6
@@ -215,7 +215,7 @@ class Backbone(nn.Module):
             nn.ReLU(),
             nn.Linear(32, 32)
         )
-        self.transformer1 = TransformerBlock(32, cfg.model.transformer_dim, nneighbor)
+        self.transformer1 = TransformerBlock(32, 512, nneighbor)
         self.transition_downs = nn.ModuleList()
         self.transformers = nn.ModuleList()
         for i in range(nblocks):
@@ -239,7 +239,7 @@ class Backbone(nn.Module):
 class PointTransformerCls(nn.Module):
     def __init__(self, task, dataset):
         super().__init__()
-        # self.backbone = Backbone(cfg)
+        self.backbone = Backbone()
         # npoints, nblocks, nneighbor, n_c, d_points = cfg.num_point, cfg.model.nblocks, cfg.model.nneighbor, cfg.num_class, cfg.input_dim
         self.task = task
         self.dataset = dataset
