@@ -74,7 +74,7 @@ _C.DATALOADER.MODELNET40_DGCNN.valid_data_path = (
     "./data/modelnet40_ply_hdf5_2048/train_files.txt"
 )
 _C.DATALOADER.MODELNET40_DGCNN.test_data_path = (
-    "./data/modelnet40_ply_hdf5_2048/test_files.txt"
+    "./data/modelnet40_ply_hdf5_2048/valid_files.txt"
 )
 _C.DATALOADER.MODELNET40_DGCNN.num_points = 1024
 
@@ -86,7 +86,7 @@ _C.DATALOADER.MODELNET40_PTV1.train_data_path = (
     "./data/modelnet40_ply_hdf5_2048/train_files.txt"
 )
 _C.DATALOADER.MODELNET40_PTV1.valid_data_path = (
-    "./data/modelnet40_ply_hdf5_2048/train_files.txt"
+    "./data/modelnet40_ply_hdf5_2048/valid_files.txt"
 )
 _C.DATALOADER.MODELNET40_PTV1.test_data_path = (
     "./data/modelnet40_ply_hdf5_2048/test_files.txt"

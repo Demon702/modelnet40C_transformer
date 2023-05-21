@@ -2,8 +2,8 @@ import numpy as np
 import torch
 import sys
 from main import get_loss
-sys.path.append("./emd/")
-import emd_module as emd
+# sys.path.append("./emd/")
+import emd.emd_module as emd
 
 def cutmix_r(data_batch,cfg):
     r = np.random.rand(1)

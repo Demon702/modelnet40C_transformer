@@ -220,6 +220,7 @@ def validate(task, loader, model, dataset_name, adapt = None, confusion = False)
         for i, data_batch in enumerate(loader):
             time1 = time()
             inp = get_inp(task, model, data_batch, loader.dataset.batch_proc, dataset_name)
+            inp = {k: v.to(DEVICE) for k, v in inp.items()}
             time2 = time()
 
             if adapt.METHOD == 'bn':
