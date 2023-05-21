@@ -39,6 +39,7 @@ _C.TRAIN.lr_reduce_patience = 10
 _C.TRAIN.l2 = 0.0
 _C.TRAIN.early_stop = 300
 _C.TRAIN.lr_clip = 0.00001
+_C.TRAIN.step_size = 50
 # -----------------------------------------------------------------------------
 # MODELNET40_RSCNN
 # -----------------------------------------------------------------------------
@@ -76,6 +77,21 @@ _C.DATALOADER.MODELNET40_DGCNN.test_data_path = (
     "./data/modelnet40_ply_hdf5_2048/test_files.txt"
 )
 _C.DATALOADER.MODELNET40_DGCNN.num_points = 1024
+
+# -----------------------------------------------------------------------------
+# MODELNET40_PTV1
+# -----------------------------------------------------------------------------
+_C.DATALOADER.MODELNET40_PTV1 = CN()
+_C.DATALOADER.MODELNET40_PTV1.train_data_path = (
+    "./data/modelnet40_ply_hdf5_2048/train_files.txt"
+)
+_C.DATALOADER.MODELNET40_PTV1.valid_data_path = (
+    "./data/modelnet40_ply_hdf5_2048/train_files.txt"
+)
+_C.DATALOADER.MODELNET40_PTV1.test_data_path = (
+    "./data/modelnet40_ply_hdf5_2048/test_files.txt"
+)
+_C.DATALOADER.MODELNET40_PTV1.num_points = 1024
 # -----------------------------------------------------------------------------
 # MODELNET40_C
 # -----------------------------------------------------------------------------

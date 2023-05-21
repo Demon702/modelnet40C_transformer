@@ -283,6 +283,7 @@ def train(task, loader, model, optimizer, loss_name, dataset_name, cfg):
             model.train()
         # print(data_batch)
         inp = get_inp(task, model, data_batch, loader.dataset.batch_proc, dataset_name)
+        inp = {k: v.to(DEVICE) for k, v in inp.items()}
         out = model(**inp)
         loss = get_loss(task, loss_name, data_batch, out, dataset_name)
 
@@ -459,6 +460,16 @@ def get_optimizer(optim_name, tr_arg, model):
             optimizer,
             tr_arg.num_epochs,
             eta_min=tr_arg.learning_rate)
+        bnm_sched = None
+    elif optim_name == 'ptv1':
+        optimizer = torch.optim.Adam(
+            model.parameters(),
+            lr=tr_arg.learning_rate,
+            weight_decay=tr_arg.l2)
+        lr_sched = lr_scheduler.StepLR(
+            optimizer,
+            step_size=tr_arg.step_size,
+            gamma=0.3)
         bnm_sched = None
     else:
         assert False

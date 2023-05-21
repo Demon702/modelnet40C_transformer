@@ -2,59 +2,87 @@ import numpy as np
 import os
 from torch.utils.data import Dataset
 import torch
-from pointnet_util import farthest_point_sample, pc_normalize
+import h5py
+from .pointnet_util import farthest_point_sample, pc_normalize
 import json
 
 
+def load_data(data_path):
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    DATA_DIR = os.path.join(BASE_DIR, '../data')
+    all_data = []
+    all_label = []
+    with open(data_path, "r") as f:
+        # for h5_name in glob.glob(os.path.join(DATA_DIR, 'modelnet40_ply_hdf5_2048', 'ply_data_%s*.h5'%partition)):
+        for h5_name in f.readlines():
+            # h5_name = os.path.join(BASE_DIR, "../../", h5_name.strip())
+            f = h5py.File(h5_name.strip(), 'r')
+            data = f['data'][:].astype('float32')
+            label = f['label'][:].astype('int64')
+            f.close()
+            all_data.append(data)
+            all_label.append(label)
+    all_data = np.concatenate(all_data, axis=0)
+    all_label = np.concatenate(all_label, axis=0)
+    return all_data, all_label
+
 class ModelNetDataLoader(Dataset):
-    def __init__(self, root, npoint=1024, split='train', uniform=False, normal_channel=True, cache_size=15000):
-        self.root = root
+    def __init__(self, data_path, npoint=1024, split='train', uniform=False, normal_channel=True):
+        self.split = split
         self.npoints = npoint
+        self.data, self.label = load_data(data_path)
         self.uniform = uniform
-        self.catfile = os.path.join(self.root, 'modelnet40_shape_names.txt')
-
-        self.cat = [line.rstrip() for line in open(self.catfile)]
-        self.classes = dict(zip(self.cat, range(len(self.cat))))
         self.normal_channel = normal_channel
+        # self.catfile = os.path.join(self.root, 'modelnet40_shape_names.txt')
 
-        shape_ids = {}
-        shape_ids['train'] = [line.rstrip() for line in open(os.path.join(self.root, 'modelnet40_train.txt'))]
-        shape_ids['test'] = [line.rstrip() for line in open(os.path.join(self.root, 'modelnet40_test.txt'))]
+        # self.cat = [line.rstrip() for line in open(self.catfile)]
+        # self.classes = dict(zip(self.cat, range(len(self.cat))))
+        # self.normal_channel = normal_channel
 
-        assert (split == 'train' or split == 'test')
-        shape_names = ['_'.join(x.split('_')[0:-1]) for x in shape_ids[split]]
-        # list of (shape_name, shape_txt_file_path) tuple
-        self.datapath = [(shape_names[i], os.path.join(self.root, shape_names[i], shape_ids[split][i]) + '.txt') for i
-                         in range(len(shape_ids[split]))]
-        print('The size of %s data is %d'%(split,len(self.datapath)))
+        # shape_ids = {}
+        # shape_ids['train'] = [line.rstrip() for line in open(os.path.join(self.root, 'modelnet40_train.txt'))]
+        # shape_ids['test'] = [line.rstrip() for line in open(os.path.join(self.root, 'modelnet40_test.txt'))]
 
-        self.cache_size = cache_size  # how many data points to cache in memory
-        self.cache = {}  # from index to (point_set, cls) tuple
+        # assert (split == 'train' or split == 'test' or split == 'valid')
+        # shape_names = ['_'.join(x.split('_')[0:-1]) for x in shape_ids[split]]
+        # # list of (shape_name, shape_txt_file_path) tuple
+        # self.datapath = [(shape_names[i], os.path.join(self.root, shape_names[i], shape_ids[split][i]) + '.txt') for i
+        #                  in range(len(shape_ids[split]))]
+        # print('The size of %s data is %d'%(split,len(self.datapath)))
+
+        # self.cache_size = cache_size  # how many data points to cache in memory
+        # self.cache = {}  # from index to (point_set, cls) tuple
 
     def __len__(self):
-        return len(self.datapath)
+        return self.data.shape[0]
 
     def _get_item(self, index):
-        if index in self.cache:
-            point_set, cls = self.cache[index]
+        # fn = self.datapath[index]
+        # cls = self.classes[self.datapath[index][0]]
+        # cls = np.array([cls]).astype(np.int32)
+        # point_set = np.loadtxt(fn[1], delimiter=',').astype(np.float32)
+        # if self.uniform:
+        #     point_set = farthest_point_sample(point_set, self.npoints)
+        # else:
+        #     point_set = point_set[0:self.npoints,:]
+
+        # point_set[:, 0:3] = pc_normalize(point_set[:, 0:3])
+
+        # if not self.normal_channel:
+        #     point_set = point_set[:, 0:3]
+
+        # if len(self.cache) < self.cache_size:
+        #     self.cache[index] = (point_set, cls)
+
+        [point_set, cls] = self.data[index], self.label[index]
+        if self.uniform:
+            point_set = farthest_point_sample(point_set, self.npoints)
         else:
-            fn = self.datapath[index]
-            cls = self.classes[self.datapath[index][0]]
-            cls = np.array([cls]).astype(np.int32)
-            point_set = np.loadtxt(fn[1], delimiter=',').astype(np.float32)
-            if self.uniform:
-                point_set = farthest_point_sample(point_set, self.npoints)
-            else:
-                point_set = point_set[0:self.npoints,:]
+            point_set = point_set[0:self.npoints,:]
 
-            point_set[:, 0:3] = pc_normalize(point_set[:, 0:3])
-
-            if not self.normal_channel:
-                point_set = point_set[:, 0:3]
-
-            if len(self.cache) < self.cache_size:
-                self.cache[index] = (point_set, cls)
-
+        point_set[:, 0:3] = pc_normalize(point_set[:, 0:3])
+        if not self.normal_channel:
+            point_set = point_set[:, 0:3]
         return point_set, cls
 
     def __getitem__(self, index):

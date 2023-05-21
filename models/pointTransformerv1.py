@@ -209,7 +209,7 @@ class Backbone(nn.Module):
     def __init__(self):
         super().__init__()
         # npoints, nblocks, nneighbor, n_c, d_points = cfg.num_point, cfg.model.nblocks, cfg.model.nneighbor, cfg.num_class, cfg.input_dim
-        npoints, nblocks, nneighbor, n_c, d_points = 1024, 4, 16, 40, 6
+        npoints, nblocks, nneighbor, n_c, d_points = 1024, 4, 16, 40, 3
         self.fc1 = nn.Sequential(
             nn.Linear(d_points, 32),
             nn.ReLU(),
@@ -228,7 +228,6 @@ class Backbone(nn.Module):
     def forward(self, x):
         xyz = x[..., :3]
         points = self.transformer1(xyz, self.fc1(x))[0]
-
         xyz_and_feats = [(xyz, points)]
         for i in range(self.nblocks):
             xyz, points = self.transition_downs[i](xyz, points)
@@ -243,8 +242,8 @@ class PointTransformerCls(nn.Module):
         # npoints, nblocks, nneighbor, n_c, d_points = cfg.num_point, cfg.model.nblocks, cfg.model.nneighbor, cfg.num_class, cfg.input_dim
         self.task = task
         self.dataset = dataset
-        num_classes = DATASET_NUM_CLASS[dataset]
-        npoints, nblocks, nneighbor, n_c, d_points = 1024, 4, 16, 40, 6
+        num_classes = 40
+        npoints, nblocks, nneighbor, n_c, d_points = 1024, 4, 16, num_classes, 3
         self.fc2 = nn.Sequential(
             nn.Linear(32 * 2 ** nblocks, 256),
             nn.ReLU(),
@@ -254,7 +253,8 @@ class PointTransformerCls(nn.Module):
         )
         self.nblocks = nblocks
     
-    def forward(self, x):
-        points, _ = self.backbone(x)
+    def forward(self, pc):
+        points, _ = self.backbone(pc)
         res = self.fc2(points.mean(1))
-        return res
+        out = { 'logit': res }
+        return out
