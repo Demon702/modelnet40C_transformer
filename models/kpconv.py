@@ -1442,7 +1442,7 @@ class KPCNN(nn.Module):
     Class defining KPCNN
     """
 
-    def __init__(self, config):
+    def __init__(self, task, dataset):
         super(KPCNN, self).__init__()
 
         #####################
@@ -1451,17 +1451,38 @@ class KPCNN(nn.Module):
 
         # Current radius of convolution and feature dimension
         layer = 0
-        r = config.first_subsampling_dl * config.conv_radius
-        in_dim = config.in_features_dim
-        out_dim = config.first_features_dim
-        self.K = config.num_kernel_points
+        first_subsampling_dl = 0.02
+        conv_radius = 2.5
+        r = first_subsampling_dl * conv_radius
+        in_features_dim = 1
+        first_features_dim = 64
+        num_kernel_points = 15
+        in_dim = in_features_dim
+        out_dim = first_features_dim
+        self.K = num_kernel_points
 
         # Save all block operations in a list of modules
         self.block_ops = nn.ModuleList()
 
         # Loop over consecutive blocks
+        architecture = ['simple',
+                    'resnetb',
+                    'resnetb_strided',
+                    'resnetb',
+                    'resnetb',
+                    'resnetb_strided',
+                    'resnetb',
+                    'resnetb',
+                    'resnetb_strided',
+                    'resnetb',
+                    'resnetb',
+                    'resnetb_strided',
+                    'resnetb',
+                    'resnetb',
+                    'global_average']
+
         block_in_layer = 0
-        for block_i, block in enumerate(config.architecture):
+        for block_i, block in enumerate(architecture):
 
             # Check equivariance
             if ('equivariant' in block) and (not out_dim % 3 == 0):
@@ -1499,7 +1520,8 @@ class KPCNN(nn.Module):
                 block_in_layer = 0
 
         self.head_mlp = UnaryBlock(out_dim, 1024, False, 0)
-        self.head_softmax = UnaryBlock(1024, config.num_classes, False, 0, no_relu=True)
+        num_classes = None
+        self.head_softmax = UnaryBlock(1024, num_classes, False, 0, no_relu=True)
 
         ################
         # Network Losses

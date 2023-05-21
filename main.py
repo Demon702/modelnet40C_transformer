@@ -416,6 +416,10 @@ def get_model(cfg):
         model = models.GDANET(
             task=cfg.EXP.TASK,
             dataset=cfg.EXP.DATASET)
+    elif cfg.EXP.MODEL_NAME == 'kpconv':
+        model = models.KPCNN(
+            task=cfg.EXP.TASK,
+            dataset=cfg.EXP.DATASET)
     else:
         assert False
 
