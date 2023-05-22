@@ -276,8 +276,9 @@ class ModelNet40Dataset(PointCloudDataset):
                 # Subsample them
                 if self.config.first_subsampling_dl > 0:
                     points, normals = grid_subsampling(data[:, :3],
-                                                       features=data[:, 3:],
+                                                       features=None,
                                                        sampleDl=self.config.first_subsampling_dl)
+                    normals = None
                 else:
                     points = data[:, :3]
                     normals = data[:, 3:]
@@ -298,10 +299,10 @@ class ModelNet40Dataset(PointCloudDataset):
             input_labels = np.array([self.name_to_label[name] for name in label_names])
 
             # Save for later use
-            with open(filename, 'wb') as file:
-                pickle.dump((input_points,
-                             input_normals,
-                             input_labels), file)
+            # with open(filename, 'wb') as file:
+            #     pickle.dump((input_points,
+            #                  input_normals,
+            #                  input_labels), file)
 
         lengths = [p.shape[0] for p in input_points]
         sizes = [l * 4 * 6 for l in lengths]
