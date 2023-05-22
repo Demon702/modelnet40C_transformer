@@ -476,6 +476,16 @@ def get_optimizer(optim_name, tr_arg, model):
             step_size=tr_arg.step_size,
             gamma=0.3)
         bnm_sched = None
+    elif optim_name == 'kpconv':
+        deform_params = [v for k, v in model.named_parameters() if 'offset' in k]
+        other_params = [v for k, v in model.named_parameters() if 'offset' not in k]
+        deform_lr = tr_arg.learning_rate * 0.1
+        optimizer = torch.optim.SGD([{'params': other_params},
+                                    {'params': deform_params, 'lr': deform_lr}],
+                                    lr=tr_arg.learning_rate,
+                                    momentum=tr_arg.momentum,
+                                    weight_decay=tr_arg.l2)
+        lr_sched = lr_scheduler.StepLR(optimizer, step_size=100, gamma=1.0)
     else:
         assert False
 

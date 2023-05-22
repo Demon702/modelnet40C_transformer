@@ -40,6 +40,7 @@ _C.TRAIN.l2 = 0.0
 _C.TRAIN.early_stop = 300
 _C.TRAIN.lr_clip = 0.00001
 _C.TRAIN.step_size = 50
+_C.TRAIN.momentum = 0.9
 # -----------------------------------------------------------------------------
 # MODELNET40_RSCNN
 # -----------------------------------------------------------------------------
@@ -92,6 +93,21 @@ _C.DATALOADER.MODELNET40_PTV1.test_data_path = (
     "./data/modelnet40_ply_hdf5_2048/test_files.txt"
 )
 _C.DATALOADER.MODELNET40_PTV1.num_points = 1024
+
+# -----------------------------------------------------------------------------
+# MODELNET40_KPCPNV
+# -----------------------------------------------------------------------------
+_C.DATALOADER.MODELNET40_KPCONV = CN()
+_C.DATALOADER.MODELNET40_KPCONV.train_data_path = (
+    "./data/modelnet40_ply_hdf5_2048/train_files.txt"
+)
+_C.DATALOADER.MODELNET40_KPCONV.valid_data_path = (
+    "./data/modelnet40_ply_hdf5_2048/valid_files.txt"
+)
+_C.DATALOADER.MODELNET40_KPCONV.test_data_path = (
+    "./data/modelnet40_ply_hdf5_2048/test_files.txt"
+)
+
 # -----------------------------------------------------------------------------
 # MODELNET40_C
 # -----------------------------------------------------------------------------

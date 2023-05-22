@@ -28,7 +28,8 @@ import numpy as np
 import pickle
 import torch
 import math
-
+import h5py
+import os
 
 # OS functions
 from os import listdir
@@ -48,10 +49,30 @@ from utils.config import bcolors
 #       \******************************/
 
 
+def load_data(data_path, first_subsampling_dl):
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    DATA_DIR = os.path.join(BASE_DIR, '../../data')
+    all_data = []
+    all_label = []
+    with open(data_path, "r") as f:
+        # for h5_name in glob.glob(os.path.join(DATA_DIR, 'modelnet40_ply_hdf5_2048', 'ply_data_%s*.h5'%partition)):
+        for h5_name in f.readlines():
+            # h5_name = os.path.join(BASE_DIR, "../../", h5_name.strip())
+            f = h5py.File(h5_name.strip(), 'r')
+            data = f['data'][:].astype('float32')
+            data = grid_subsampling(data[:, :3], features=None, sampleDl=first_subsampling_dl)
+            label = f['label'][:].astype('int64')
+            f.close()
+            all_data.append(data)
+            all_label.append(label)
+    all_data = np.concatenate(all_data, axis=0)
+    all_label = np.concatenate(all_label, axis=0)
+    return all_data, all_label
+
 class ModelNet40Dataset(PointCloudDataset):
     """Class to handle Modelnet 40 dataset."""
 
-    def __init__(self, config, train=True, orient_correction=True):
+    def __init__(self, config, data_path, train=True, orient_correction=True):
         """
         This dataset is small enough to be stored in-memory, so load all point clouds here
         """
@@ -62,46 +83,46 @@ class ModelNet40Dataset(PointCloudDataset):
         ############
 
         # Dict from labels to names
-        self.label_to_names = {0: 'airplane',
-                               1: 'bathtub',
-                               2: 'bed',
-                               3: 'bench',
-                               4: 'bookshelf',
-                               5: 'bottle',
-                               6: 'bowl',
-                               7: 'car',
-                               8: 'chair',
-                               9: 'cone',
-                               10: 'cup',
-                               11: 'curtain',
-                               12: 'desk',
-                               13: 'door',
-                               14: 'dresser',
-                               15: 'flower_pot',
-                               16: 'glass_box',
-                               17: 'guitar',
-                               18: 'keyboard',
-                               19: 'lamp',
-                               20: 'laptop',
-                               21: 'mantel',
-                               22: 'monitor',
-                               23: 'night_stand',
-                               24: 'person',
-                               25: 'piano',
-                               26: 'plant',
-                               27: 'radio',
-                               28: 'range_hood',
-                               29: 'sink',
-                               30: 'sofa',
-                               31: 'stairs',
-                               32: 'stool',
-                               33: 'table',
-                               34: 'tent',
-                               35: 'toilet',
-                               36: 'tv_stand',
-                               37: 'vase',
-                               38: 'wardrobe',
-                               39: 'xbox'}
+        # self.label_to_names = {0: 'airplane',
+        #                        1: 'bathtub',
+        #                        2: 'bed',
+        #                        3: 'bench',
+        #                        4: 'bookshelf',
+        #                        5: 'bottle',
+        #                        6: 'bowl',
+        #                        7: 'car',
+        #                        8: 'chair',
+        #                        9: 'cone',
+        #                        10: 'cup',
+        #                        11: 'curtain',
+        #                        12: 'desk',
+        #                        13: 'door',
+        #                        14: 'dresser',
+        #                        15: 'flower_pot',
+        #                        16: 'glass_box',
+        #                        17: 'guitar',
+        #                        18: 'keyboard',
+        #                        19: 'lamp',
+        #                        20: 'laptop',
+        #                        21: 'mantel',
+        #                        22: 'monitor',
+        #                        23: 'night_stand',
+        #                        24: 'person',
+        #                        25: 'piano',
+        #                        26: 'plant',
+        #                        27: 'radio',
+        #                        28: 'range_hood',
+        #                        29: 'sink',
+        #                        30: 'sofa',
+        #                        31: 'stairs',
+        #                        32: 'stool',
+        #                        33: 'table',
+        #                        34: 'tent',
+        #                        35: 'toilet',
+        #                        36: 'tv_stand',
+        #                        37: 'vase',
+        #                        38: 'wardrobe',
+        #                        39: 'xbox'}
 
         # Initialize a bunch of variables concerning class labels
         self.init_labels()
@@ -110,7 +131,7 @@ class ModelNet40Dataset(PointCloudDataset):
         self.ignored_labels = np.array([])
 
         # Dataset folder
-        self.path = '../../Data/ModelNet40'
+        # self.path = '../../Data/ModelNet40'
 
         # Type of task conducted on this dataset
         self.dataset_task = 'classification'
@@ -118,7 +139,6 @@ class ModelNet40Dataset(PointCloudDataset):
         # Update number of class and data task in configuration
         config.num_classes = self.num_classes
         config.dataset_task = self.dataset_task
-
         # Parameters from config
         self.config = config
 
@@ -143,8 +163,7 @@ class ModelNet40Dataset(PointCloudDataset):
         if 0 < self.config.first_subsampling_dl <= 0.01:
             raise ValueError('subsampling_parameter too low (should be over 1 cm')
 
-        self.input_points, self.input_normals, self.input_labels = self.load_subsampled_clouds(orient_correction)
-
+        self.input_points, self.input_labels = load_data(data_path, config.first_subsampling_dl)
         return
 
     def __len__(self):
@@ -174,15 +193,15 @@ class ModelNet40Dataset(PointCloudDataset):
 
             # Get points and labels
             points = self.input_points[p_i].astype(np.float32)
-            normals = self.input_normals[p_i].astype(np.float32)
+            # normals = self.input_normals[p_i].astype(np.float32)
             label = self.label_to_idx[self.input_labels[p_i]]
 
             # Data augmentation
-            points, normals, scale, R = self.augmentation_transform(points, normals)
+            points, normals, scale, R = self.augmentation_transform(points)
 
             # Stack batch
             tp_list += [points]
-            tn_list += [normals]
+            # tn_list += [normals]
             tl_list += [label]
             ti_list += [p_i]
             s_list += [scale]
@@ -195,7 +214,7 @@ class ModelNet40Dataset(PointCloudDataset):
         #show_ModelNet_examples(tp_list, cloud_normals=tn_list)
 
         stacked_points = np.concatenate(tp_list, axis=0)
-        stacked_normals = np.concatenate(tn_list, axis=0)
+        # stacked_normals = np.concatenate(tn_list, axis=0)
         labels = np.array(tl_list, dtype=np.int64)
         model_inds = np.array(ti_list, dtype=np.int32)
         stack_lengths = np.array([tp.shape[0] for tp in tp_list], dtype=np.int32)
@@ -206,8 +225,8 @@ class ModelNet40Dataset(PointCloudDataset):
         stacked_features = np.ones_like(stacked_points[:, :1], dtype=np.float32)
         if self.config.in_features_dim == 1:
             pass
-        elif self.config.in_features_dim == 4:
-            stacked_features = np.hstack((stacked_features, stacked_normals))
+        # elif self.config.in_features_dim == 4:
+        #     stacked_features = np.hstack((stacked_features, stacked_normals))
         else:
             raise ValueError('Only accepted input dimensions are 1, 4 and 7 (without and with XYZ)')
 

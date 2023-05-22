@@ -179,6 +179,43 @@ class Modelnet40Config(Config):
 #       \***************/
 #
 
+def get_dataloader(split, data_path):
+    config = Modelnet40Config()
+
+    # Get path from argument if given
+    # if len(sys.argv) > 1:
+    #     config.saving_path = sys.argv[1]
+
+    # Initialize datasets
+    # training_dataset = ModelNet40Dataset(config, data_path, train=True)
+    # test_dataset = ModelNet40Dataset(config, train=False)
+    dataset = ModelNet40Dataset(config, data_path, train=(split == 'train'))
+
+    # Initialize samplers
+    # training_sampler = ModelNet40Sampler(training_dataset, balance_labels=True)
+    # test_sampler = ModelNet40Sampler(test_dataset, balance_labels=True)
+    sampler = ModelNet40Sampler(dataset, balance_labels=True)
+
+    # Initialize the dataloader
+    # training_loader = DataLoader(training_dataset,
+    #                              batch_size=1,
+    #                              sampler=training_sampler,
+    #                              collate_fn=ModelNet40Collate,
+    #                              num_workers=config.input_threads,
+    #                              pin_memory=True)
+    # test_loader = DataLoader(test_dataset,
+    #                          batch_size=1,
+    #                          sampler=test_sampler,
+    #                          collate_fn=ModelNet40Collate,
+    #                          num_workers=config.input_threads,
+    #                          pin_memory=True)
+    return DataLoader(training_dataset,
+                    batch_size=1,
+                    sampler=sampler,
+                    collate_fn=ModelNet40Collate,
+                    num_workers=config.input_threads,
+                    pin_memory=True)
+
 if __name__ == '__main__':
 
     ############################

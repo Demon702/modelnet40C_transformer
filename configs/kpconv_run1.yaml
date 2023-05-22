@@ -1,0 +1,20 @@
+DATALOADER:
+  batch_size: 16
+  num_workers: 0
+EXP:
+  DATASET: modelnet40_kpconv
+  EXP_ID: kpconv_run_1
+  LOSS_NAME: cross_entropy
+  MODEL_NAME: kpconv
+  OPTIMIZER: kpconv
+  SEED: 1
+  TASK: cls
+TRAIN:
+  learning_rate: 1e-2
+  num_epochs: 2
+  l2: 1e-3
+  step_size: 100
+  momentum: 0.98
+EXP_EXTRA:
+  no_val: False
+  no_test: True
