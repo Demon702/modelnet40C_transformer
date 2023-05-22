@@ -1218,12 +1218,12 @@ class SimpleBlock(nn.Module):
         super(SimpleBlock, self).__init__()
 
         # get KP_extent from current radius
-        KP_extent = 1.0 
+        KP_extent = 1.2 
         conv_radius = 2.5
         current_extent = radius * KP_extent / conv_radius
 
         # Get other parameters
-        batch_norm_momentum = 0.99
+        batch_norm_momentum = 0.05
         use_batch_norm = True
         self.bn_momentum = batch_norm_momentum
         self.use_bn = use_batch_norm
@@ -1285,12 +1285,12 @@ class ResnetBottleneckBlock(nn.Module):
         super(ResnetBottleneckBlock, self).__init__()
 
         # get KP_extent from current radius
-        KP_extent = 1.0
+        KP_extent = 1.2
         conv_radius = 2.5
         current_extent = radius * KP_extent / conv_radius
 
         # Get other parameters
-        batch_norm_momentum = 0.99
+        batch_norm_momentum = 0.05
         use_batch_norm = True
         self.bn_momentum = batch_norm_momentum
         self.use_bn = use_batch_norm
@@ -1422,7 +1422,7 @@ def block_decider(block_name,
                   layer_ind):
 
     use_batch_norm = True
-    batch_norm_momentum = 0.99
+    batch_norm_momentum = 0.05
     if block_name == 'unary':
         return UnaryBlock(in_dim, out_dim, use_batch_norm, batch_norm_momentum)
 
