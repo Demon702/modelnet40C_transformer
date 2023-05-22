@@ -2,8 +2,8 @@ import numpy as np
 import torch
 import sys
 from main import get_loss
-# sys.path.append("./emd/")
-import emd.emd_module as emd
+sys.path.append("./emd/")
+import emd_module as emd
 
 def cutmix_r(data_batch,cfg):
     r = np.random.rand(1)
@@ -117,7 +117,7 @@ def mixup(data_batch,cfg):
     remd = emd.emdModule()
     remd = remd.cuda()
     _, ass = remd(data_batch['pc'], data_minor, 0.005, 300)
-    ass = ass.long()
+    ass = ass.long().cpu()
     for i in range(batch_size):
         data_minor[i] = data_minor[i][ass[i]]
     data_batch['pc'] = data_batch['pc'] * (1 - mix_rate_expand_xyz) + data_minor * mix_rate_expand_xyz

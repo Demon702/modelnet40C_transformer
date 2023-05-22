@@ -641,7 +641,7 @@ if __name__ == '__main__':
     parser.set_defaults(entry=lambda cmd_args: parser.print_help())
     parser.add_argument('--entry', type=str, default="train")
     parser.add_argument('--exp-config', type=str, default="")
-    parser.add_argument('--model-path', type=str, default="")
+    parser.add_argument('--model_path', type=str, default="")
     parser.add_argument('--resume', action="store_true", default=False)
     # parser.add_argument('--gpu',type=str,default='0',
                         # help="Which gpu to use")
