@@ -15,4 +15,5 @@ LastEditTime: 2022-02-22 23:36:25
 # from .pointmlp2 import pointMLP2
 # from .curvenet import CurveNet
 # from .gdanet import GDANET
+from .kpconv import KPCNN
 from .pointTransformerv1 import PointTransformerCls as PTV1

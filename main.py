@@ -418,6 +418,10 @@ def get_model(cfg):
         model = models.GDANET(
             task=cfg.EXP.TASK,
             dataset=cfg.EXP.DATASET)
+    elif cfg.EXP.MODEL_NAME == 'kpconv':
+        model = models.KPCNN(
+            task=cfg.EXP.TASK,
+            dataset=cfg.EXP.DATASET)
     elif cfg.EXP.MODEL_NAME == 'ptv1':
         model = models.PTV1(
             task=cfg.EXP.TASK,
