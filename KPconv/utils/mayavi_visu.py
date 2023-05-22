@@ -31,7 +31,7 @@ from os.path import exists, join
 import time
 
 import sys
-
+sys.path.append("KPconv")
 # PLY reader
 from utils.ply import write_ply, read_ply
 

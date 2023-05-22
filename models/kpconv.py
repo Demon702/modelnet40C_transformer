@@ -1207,7 +1207,7 @@ class UnaryBlock(nn.Module):
 
 class SimpleBlock(nn.Module):
 
-    def __init__(self, block_name, in_dim, out_dim, radius, layer_ind, config):
+    def __init__(self, block_name, in_dim, out_dim, radius, layer_ind):
         """
         Initialize a simple convolution block with its ReLU and BatchNorm.
         :param in_dim: dimension input features
@@ -1274,7 +1274,7 @@ class SimpleBlock(nn.Module):
 
 class ResnetBottleneckBlock(nn.Module):
 
-    def __init__(self, block_name, in_dim, out_dim, radius, layer_ind, config):
+    def __init__(self, block_name, in_dim, out_dim, radius, layer_ind):
         """
         Initialize a resnet bottleneck block.
         :param in_dim: dimension input features
@@ -1444,7 +1444,7 @@ def block_decider(block_name,
                         'resnetb_deformable_strided',
                         'resnetb_equivariant_strided',
                         'resnetb_invariant_strided']:
-        return ResnetBottleneckBlock(block_name, in_dim, out_dim, radius, layer_ind, config)
+        return ResnetBottleneckBlock(block_name, in_dim, out_dim, radius, layer_ind)
 
     elif block_name == 'max_pool' or block_name == 'max_pool_wide':
         return MaxPoolBlock(layer_ind)
@@ -1540,7 +1540,7 @@ class KPCNN(nn.Module):
                 block_in_layer = 0
 
         self.head_mlp = UnaryBlock(out_dim, 1024, False, 0)
-        num_classes = None
+        num_classes = 40
         self.head_softmax = UnaryBlock(1024, num_classes, False, 0, no_relu=True)
 
         ################
@@ -1567,7 +1567,6 @@ class KPCNN(nn.Module):
 
         # Save all block operations in a list of modules
         x = batch.features.clone().detach()
-
         # Loop over consecutive blocks
         for block_op in self.block_ops:
             x = block_op(x, batch)

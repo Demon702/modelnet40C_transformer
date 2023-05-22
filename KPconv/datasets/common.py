@@ -27,13 +27,13 @@ import numpy as np
 import sys
 import torch
 from torch.utils.data import DataLoader, Dataset
-from utils.config import Config
-from utils.mayavi_visu import *
-from kernels.kernel_points import create_3D_rotations
+from KPconv.utils.config import Config
+from KPconv.utils.mayavi_visu import *
+from KPconv.kernels.kernel_points import create_3D_rotations
 
 # Subsampling extension
-import cpp_wrappers.cpp_subsampling.grid_subsampling as cpp_subsampling
-import cpp_wrappers.cpp_neighbors.radius_neighbors as cpp_neighbors
+import KPconv.cpp_wrappers.cpp_subsampling.grid_subsampling as cpp_subsampling
+import KPconv.cpp_wrappers.cpp_neighbors.radius_neighbors as cpp_neighbors
 
 # ----------------------------------------------------------------------------------------------------------------------
 #
@@ -213,7 +213,7 @@ class PointCloudDataset(Dataset):
         self.name = name
         self.path = ''
         self.label_to_names = {}
-        self.num_classes = 0
+        self.num_classes = 40
         self.label_values = np.zeros((0,), dtype=np.int32)
         self.label_names = []
         self.label_to_idx = {}

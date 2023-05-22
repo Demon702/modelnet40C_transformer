@@ -236,6 +236,7 @@ def create_dataloader(split, cfg):
         dataset = ModelNet40PtV1(**dataset_args)
     elif cfg.EXP.DATASET == "modelnet40_kpconv":
         dataset_args.update(dict(**cfg.DATALOADER.MODELNET40_KPCONV))
+        dataset = ModelNet40PtV1(**dataset_args)
     elif cfg.EXP.DATASET == "modelnet40_c":
         dataset_args.update(dict(**cfg.DATALOADER.MODELNET40_C))
         dataset = ModelNet40C(**dataset_args)

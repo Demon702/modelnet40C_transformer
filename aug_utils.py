@@ -11,7 +11,7 @@ def cutmix_r(data_batch,cfg):
         lam = np.random.beta(cfg.AUG.BETA, cfg.AUG.BETA)
         B = data_batch['pc'].size()[0]
 
-        rand_index = torch.randperm(B).cuda()
+        rand_index = torch.randperm(B)
         target_a = data_batch['label']
         target_b = data_batch['label'][rand_index]
 
@@ -24,8 +24,9 @@ def cutmix_r(data_batch,cfg):
         # point_a, point_b, point_c = point_a.to(device), point_b.to(device), point_c.to(device)
 
         remd = emd.emdModule()
-        remd = remd.cuda()
+        # remd = remd.cuda()
         dis, ind = remd(point_a, point_b, 0.005, 300)
+        ind = ind.cpu()
         for ass in range(B):
             point_c[ass, :, :] = point_c[ass, ind[ass].long(), :]
 
@@ -53,7 +54,7 @@ def cutmix_k(data_batch,cfg):
         lam = np.random.beta(cfg.AUG.BETA, cfg.AUG.BETA)
         B = data_batch['pc'].size()[0]
 
-        rand_index = torch.randperm(B).cuda()
+        rand_index = torch.randperm(B)
         target_a = data_batch['label']
         target_b = data_batch['label'][rand_index]
 
@@ -65,8 +66,9 @@ def cutmix_k(data_batch,cfg):
         point_c = data_batch['pc'][rand_index]
 
         remd = emd.emdModule()
-        remd = remd.cuda()
+        # remd = remd.cuda()
         dis, ind = remd(point_a, point_b, 0.005, 300)
+        ind = ind.cpu()
         for ass in range(B):
             point_c[ass, :, :] = point_c[ass, ind[ass].long(), :]
 

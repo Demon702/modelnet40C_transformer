@@ -104,8 +104,9 @@ class PerfTrackVal:
     """
     Records epoch wise performance for validation
     """
-    def __init__(self, task, extra_param=None):
+    def __init__(self, task, extra_param=None, kpconv=False):
         self.task = task
+        self.kpconv = kpconv
         if task in ['cls', 'cls_trans']:
             assert extra_param is None
             self.all = []
@@ -115,9 +116,14 @@ class PerfTrackVal:
             assert False
     def update(self, data_batch, out):
         if self.task in ['cls', 'cls_trans']:
-            correct = self.get_correct_list(out['logit'], data_batch['label'])
-            self.all.extend(correct)
-            self.update_class_see_corr(out['logit'], data_batch['label'])
+            if self.kpconv:
+                correct = self.get_correct_list(out, data_batch.labels)
+                self.all.extend(correct)
+                self.update_class_see_corr(out, data_batch.labels)
+            else:
+                correct = self.get_correct_list(out['logit'], data_batch['label'])
+                self.all.extend(correct)
+                self.update_class_see_corr(out['logit'], data_batch['label'])
         else:
             assert False
     def agg(self):
@@ -158,8 +164,8 @@ class PerfTrackTrain(PerfTrackVal):
     """
     Records epoch wise performance during training
     """
-    def __init__(self, task, extra_param=None):
-        super().__init__(task, extra_param)
+    def __init__(self, task, extra_param=None, kpconv=False):
+        super().__init__(task, extra_param, kpconv)
         # add a list to track loss
         self.all_loss = []
 

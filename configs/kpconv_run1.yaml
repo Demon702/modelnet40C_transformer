@@ -11,7 +11,7 @@ EXP:
   TASK: cls
 TRAIN:
   learning_rate: 1e-2
-  num_epochs: 2
+  num_epochs: 75
   l2: 1e-3
   step_size: 100
   momentum: 0.98

@@ -29,12 +29,12 @@ import sys
 import torch
 
 # Dataset
-from datasets.ModelNet40 import *
+from .datasets.ModelNet40 import *
 from torch.utils.data import DataLoader
 
-from utils.config import Config
-from utils.trainer import ModelTrainer
-from models.architectures import KPCNN
+from .utils.config import Config
+from.utils.trainer import ModelTrainer
+from .models.architectures import KPCNN
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -209,12 +209,15 @@ def get_dataloader(split, data_path):
     #                          collate_fn=ModelNet40Collate,
     #                          num_workers=config.input_threads,
     #                          pin_memory=True)
-    return DataLoader(training_dataset,
+    dataset.batch_proc = None
+    loader = DataLoader(dataset,
                     batch_size=1,
                     sampler=sampler,
                     collate_fn=ModelNet40Collate,
-                    num_workers=config.input_threads,
+                    num_workers=0,
                     pin_memory=True)
+    sampler.calibration(loader)
+    return loader
 
 if __name__ == '__main__':
 

@@ -30,18 +30,18 @@ import torch
 import math
 import h5py
 import os
-
+import sys 
 # OS functions
 from os import listdir
 from os.path import exists, join
 
 # Dataset parent class
-from datasets.common import PointCloudDataset
+from .common import PointCloudDataset
 from torch.utils.data import Sampler, get_worker_info
-from utils.mayavi_visu import *
+from KPconv.utils.mayavi_visu import *
 
-from datasets.common import grid_subsampling
-from utils.config import bcolors
+from .common import grid_subsampling
+from KPconv.utils.config import bcolors
 
 # ----------------------------------------------------------------------------------------------------------------------
 #
@@ -60,7 +60,8 @@ def load_data(data_path, first_subsampling_dl):
             # h5_name = os.path.join(BASE_DIR, "../../", h5_name.strip())
             f = h5py.File(h5_name.strip(), 'r')
             data = f['data'][:].astype('float32')
-            data = grid_subsampling(data[:, :3], features=None, sampleDl=first_subsampling_dl)
+            for d in data:
+                d = grid_subsampling(d[:, :3], features=None, sampleDl=first_subsampling_dl)
             label = f['label'][:].astype('int64')
             f.close()
             all_data.append(data)
@@ -83,46 +84,46 @@ class ModelNet40Dataset(PointCloudDataset):
         ############
 
         # Dict from labels to names
-        # self.label_to_names = {0: 'airplane',
-        #                        1: 'bathtub',
-        #                        2: 'bed',
-        #                        3: 'bench',
-        #                        4: 'bookshelf',
-        #                        5: 'bottle',
-        #                        6: 'bowl',
-        #                        7: 'car',
-        #                        8: 'chair',
-        #                        9: 'cone',
-        #                        10: 'cup',
-        #                        11: 'curtain',
-        #                        12: 'desk',
-        #                        13: 'door',
-        #                        14: 'dresser',
-        #                        15: 'flower_pot',
-        #                        16: 'glass_box',
-        #                        17: 'guitar',
-        #                        18: 'keyboard',
-        #                        19: 'lamp',
-        #                        20: 'laptop',
-        #                        21: 'mantel',
-        #                        22: 'monitor',
-        #                        23: 'night_stand',
-        #                        24: 'person',
-        #                        25: 'piano',
-        #                        26: 'plant',
-        #                        27: 'radio',
-        #                        28: 'range_hood',
-        #                        29: 'sink',
-        #                        30: 'sofa',
-        #                        31: 'stairs',
-        #                        32: 'stool',
-        #                        33: 'table',
-        #                        34: 'tent',
-        #                        35: 'toilet',
-        #                        36: 'tv_stand',
-        #                        37: 'vase',
-        #                        38: 'wardrobe',
-        #                        39: 'xbox'}
+        self.label_to_names = {0: 'airplane',
+                               1: 'bathtub',
+                               2: 'bed',
+                               3: 'bench',
+                               4: 'bookshelf',
+                               5: 'bottle',
+                               6: 'bowl',
+                               7: 'car',
+                               8: 'chair',
+                               9: 'cone',
+                               10: 'cup',
+                               11: 'curtain',
+                               12: 'desk',
+                               13: 'door',
+                               14: 'dresser',
+                               15: 'flower_pot',
+                               16: 'glass_box',
+                               17: 'guitar',
+                               18: 'keyboard',
+                               19: 'lamp',
+                               20: 'laptop',
+                               21: 'mantel',
+                               22: 'monitor',
+                               23: 'night_stand',
+                               24: 'person',
+                               25: 'piano',
+                               26: 'plant',
+                               27: 'radio',
+                               28: 'range_hood',
+                               29: 'sink',
+                               30: 'sofa',
+                               31: 'stairs',
+                               32: 'stool',
+                               33: 'table',
+                               34: 'tent',
+                               35: 'toilet',
+                               36: 'tv_stand',
+                               37: 'vase',
+                               38: 'wardrobe',
+                               39: 'xbox'}
 
         # Initialize a bunch of variables concerning class labels
         self.init_labels()
@@ -164,6 +165,7 @@ class ModelNet40Dataset(PointCloudDataset):
             raise ValueError('subsampling_parameter too low (should be over 1 cm')
 
         self.input_points, self.input_labels = load_data(data_path, config.first_subsampling_dl)
+        self.input_labels = self.input_labels.flatten()
         return
 
     def __len__(self):
@@ -197,7 +199,7 @@ class ModelNet40Dataset(PointCloudDataset):
             label = self.label_to_idx[self.input_labels[p_i]]
 
             # Data augmentation
-            points, normals, scale, R = self.augmentation_transform(points)
+            points, scale, R = self.augmentation_transform(points)
 
             # Stack batch
             tp_list += [points]

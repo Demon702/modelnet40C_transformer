@@ -52,7 +52,10 @@ def check_inp_fmt(task, data_batch, dataset_name):
     if task in ['cls', 'cls_trans']:
         # assert set(data_batch.keys()) == {'pc', 'label'}
         # print(data_batch['pc'],data_batch['label'])
-        pc, label = data_batch['pc'], data_batch['label']
+        if dataset_name == 'modelnet40_kpconv':
+            pc, label = data_batch.points, data_batch.labels
+        else:
+            pc, label = data_batch['pc'], data_batch['label']
         # special case made for modelnet40_dgcnn to match the
         # original implementation
         # dgcnn loads torch.DoubleTensor for the test dataset
@@ -98,6 +101,8 @@ def check_out_fmt(task, out, dataset_name):
 
 
 def get_inp(task, model, data_batch, batch_proc, dataset_name):
+    if dataset_name == 'modelnet40_kpconv':
+        return data_batch
     check_inp_fmt(task, data_batch, dataset_name)
     if not batch_proc is None:
         data_batch = batch_proc(data_batch, DEVICE)
@@ -205,14 +210,18 @@ def validate(task, loader, model, dataset_name, adapt = None, confusion = False)
     def get_extra_param():
         return None
 
-    perf = PerfTrackVal(task, extra_param=get_extra_param())
+    perf = PerfTrackVal(task, extra_param=get_extra_param(), kpconv=dataset_name=='modelnet40_kpconv')
     time_dl = 0
     time_gi = 0
     time_model = 0
     time_upd = 0
 
     with torch.no_grad():
-        bar = ProgressBar(max_value=len(loader))
+        try:
+            max_value = len(loader)
+        except:
+            max_value = 1000
+        bar = ProgressBar(max_value=max_value)
         time5  = time()
         if confusion:
             pred = []
@@ -220,7 +229,10 @@ def validate(task, loader, model, dataset_name, adapt = None, confusion = False)
         for i, data_batch in enumerate(loader):
             time1 = time()
             inp = get_inp(task, model, data_batch, loader.dataset.batch_proc, dataset_name)
-            inp = {k: v.to(DEVICE) for k, v in inp.items()}
+            if type(inp) is dict:
+                inp = {k: v.to(DEVICE) for k, v in inp.items()}
+            else:
+                inp = inp.to(DEVICE)
             time2 = time()
 
             if adapt.METHOD == 'bn':
@@ -228,7 +240,10 @@ def validate(task, loader, model, dataset_name, adapt = None, confusion = False)
             elif adapt.METHOD == 'tent':
                 model = adapt_tent(inp,model,adapt)
 
-            out = model(**inp)
+            if type(inp) is dict:
+                out = model(**inp)
+            else:
+                out = model(inp)
 
             if confusion:
                 pred.append(out['logit'].squeeze().cpu())
@@ -262,7 +277,7 @@ def train(task, loader, model, optimizer, loss_name, dataset_name, cfg):
     def get_extra_param():
        return None
 
-    perf = PerfTrackTrain(task, extra_param=get_extra_param())
+    perf = PerfTrackTrain(task, extra_param=get_extra_param(), kpconv=dataset_name=='modelnet40_kpconv')
     time_forward = 0
     time_backward = 0
     time_data_loading = 0
@@ -284,9 +299,17 @@ def train(task, loader, model, optimizer, loss_name, dataset_name, cfg):
             model.train()
         # print(data_batch)
         inp = get_inp(task, model, data_batch, loader.dataset.batch_proc, dataset_name)
-        inp = {k: v.to(DEVICE) for k, v in inp.items()}
-        out = model(**inp)
-        loss = get_loss(task, loss_name, data_batch, out, dataset_name)
+        if type(inp) is dict:
+            inp = {k: v.to(DEVICE) for k, v in inp.items()}
+            out = model(**inp)
+        else:
+            inp = inp.to(DEVICE)
+            out = model(inp)
+
+        if dataset_name == 'modelnet40_kpconv':
+            loss = model.loss(out, data_batch.labels)
+        else:
+            loss = get_loss(task, loss_name, data_batch, out, dataset_name)
 
         perf.update_all(data_batch=data_batch, out=out, loss=loss)
         time2 = time()
@@ -317,11 +340,16 @@ def train(task, loader, model, optimizer, loss_name, dataset_name, cfg):
         time_forward += (time2 - time1)
         time3 = time()
         time_backward += (time3 - time2)
-
-        if i % 50 == 0:
-            print(
-                f"[{i}/{len(loader)}] avg_loss: {perf.agg_loss()}, FW time = {round(time_forward, 2)}, "
-                f"BW time = {round(time_backward, 2)}, DL time = {round(time_data_loading, 2)}")
+        if dataset_name == 'modelnet40_kpconv':
+            if i % 50 == 0:
+                print(
+                    f"[{i}]avg_loss: {perf.agg_loss()}, FW time = {round(time_forward, 2)}, "
+                    f"BW time = {round(time_backward, 2)}, DL time = {round(time_data_loading, 2)}")
+        else:
+            if i % 50 == 0:
+                print(
+                    f"[{i}/{len(loader)}] avg_loss: {perf.agg_loss()}, FW time = {round(time_forward, 2)}, "
+                    f"BW time = {round(time_backward, 2)}, DL time = {round(time_data_loading, 2)}")
 
     return perf.agg(), perf.agg_loss()
 
@@ -486,6 +514,7 @@ def get_optimizer(optim_name, tr_arg, model):
                                     momentum=tr_arg.momentum,
                                     weight_decay=tr_arg.l2)
         lr_sched = lr_scheduler.StepLR(optimizer, step_size=100, gamma=1.0)
+        bnm_sched = None
     else:
         assert False
 

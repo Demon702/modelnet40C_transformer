@@ -32,7 +32,7 @@ from os import makedirs, remove
 from os.path import exists, join
 import time
 import sys
-
+sys.path.append("KPconv")
 # PLY reader
 from utils.ply import read_ply, write_ply
 
@@ -41,7 +41,7 @@ from utils.metrics import IoU_from_confusions, fast_confusion
 from utils.config import Config
 from sklearn.neighbors import KDTree
 
-from models.blocks import KPConv
+# from models.blocks import KPConv
 
 
 # ----------------------------------------------------------------------------------------------------------------------
