@@ -1,0 +1,21 @@
+DATALOADER:
+  batch_size: 16
+  num_workers: 0
+EXP:
+  DATASET: modelnet40_ptv1
+  EXP_ID: pgd_ptv1_run_1
+  LOSS_NAME: cross_entropy
+  MODEL_NAME: ptv1
+  OPTIMIZER: ptv1
+  SEED: 1
+  TASK: cls
+TRAIN:
+  learning_rate: 1e-4
+  num_epochs: 75
+  l2: 1e-3
+  step_size: 50
+AUG:
+  NAME: pgd
+EXP_EXTRA:
+  no_val: False
+  no_test: True

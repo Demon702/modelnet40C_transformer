@@ -11,7 +11,7 @@ def cutmix_r(data_batch,cfg):
         lam = np.random.beta(cfg.AUG.BETA, cfg.AUG.BETA)
         B = data_batch['pc'].size()[0]
 
-        rand_index = torch.randperm(B).cuda()
+        rand_index = torch.randperm(B)
         target_a = data_batch['label']
         target_b = data_batch['label'][rand_index]
 
@@ -24,8 +24,9 @@ def cutmix_r(data_batch,cfg):
         # point_a, point_b, point_c = point_a.to(device), point_b.to(device), point_c.to(device)
 
         remd = emd.emdModule()
-        remd = remd.cuda()
+        # remd = remd.cuda()
         dis, ind = remd(point_a, point_b, 0.005, 300)
+        ind = ind.cpu()
         for ass in range(B):
             point_c[ass, :, :] = point_c[ass, ind[ass].long(), :]
 
@@ -53,7 +54,7 @@ def cutmix_k(data_batch,cfg):
         lam = np.random.beta(cfg.AUG.BETA, cfg.AUG.BETA)
         B = data_batch['pc'].size()[0]
 
-        rand_index = torch.randperm(B).cuda()
+        rand_index = torch.randperm(B)
         target_a = data_batch['label']
         target_b = data_batch['label'][rand_index]
 
@@ -65,8 +66,9 @@ def cutmix_k(data_batch,cfg):
         point_c = data_batch['pc'][rand_index]
 
         remd = emd.emdModule()
-        remd = remd.cuda()
+        # remd = remd.cuda()
         dis, ind = remd(point_a, point_b, 0.005, 300)
+        ind = ind.cpu()
         for ass in range(B):
             point_c[ass, :, :] = point_c[ass, ind[ass].long(), :]
 
@@ -117,7 +119,7 @@ def mixup(data_batch,cfg):
     remd = emd.emdModule()
     remd = remd.cuda()
     _, ass = remd(data_batch['pc'], data_minor, 0.005, 300)
-    ass = ass.long()
+    ass = ass.long().cpu()
     for i in range(batch_size):
         data_minor[i] = data_minor[i][ass[i]]
     data_batch['pc'] = data_batch['pc'] * (1 - mix_rate_expand_xyz) + data_minor * mix_rate_expand_xyz
@@ -330,12 +332,13 @@ def rsmix(data, cfg, n_sample=512, KNN=False):
 
 def pgd(data_batch,model, task, loss_name, dataset_name, step= 7, eps=0.05, alpha=0.01):
     model.eval()
-    data = data_batch['pc']
+    data = data_batch['pc'].cuda()
     adv_data=data.clone()
     adv_data=adv_data+(torch.rand_like(adv_data)*eps*2-eps)
     adv_data.detach()
     adv_data_batch = {}
 
+    adv_data = adv_data.cuda()
     for _ in range(step):
         adv_data.requires_grad=True
         out = model(**{'pc':adv_data})
@@ -350,5 +353,5 @@ def pgd(data_batch,model, task, loss_name, dataset_name, step= 7, eps=0.05, alph
             # print(delta)
             delta = torch.clamp(delta,-eps,eps)
             adv_data = (data+delta).detach_()
-    
+    adv_data_batch['pc'] = adv_data_batch['pc'].type(torch.FloatTensor)
     return adv_data_batch

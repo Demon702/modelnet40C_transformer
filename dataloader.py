@@ -7,10 +7,11 @@ import os
 from pc_utils import (rotate_point_cloud, PointcloudScaleAndTranslate)
 import rs_cnn.data.data_utils as rscnn_d_utils
 from rs_cnn.data.ModelNet40Loader import ModelNet40Cls as rscnn_ModelNet40Cls
-import PCT_Pytorch.pointnet2_ops_lib.pointnet2_ops.pointnet2_utils as pointnet2_utils
+# import PCT_Pytorch.pointnet2_ops_lib.pointnet2_ops.pointnet2_utils as pointnet2_utils
 from pointnet2_tf.modelnet_h5_dataset import ModelNetH5Dataset as pointnet2_ModelNetH5Dataset
 from dgcnn.pytorch.data import ModelNet40 as dgcnn_ModelNet40
-
+from Point_Transformers.dataset import ModelNetDataLoader as ptv1_ModelNet40
+from KPconv.train_ModelNet40 import get_dataloader as kpconv_ModelNet40_dataloader
 
 # distilled from the following sources:
 # https://github.com/Yochengliu/Relation-Shape-CNN/blob/master/data/ModelNet40Loader.py
@@ -143,6 +144,41 @@ class ModelNet40Dgcnn(Dataset):
     def __getitem__(self, idx):
         pc, label = self.dataset.__getitem__(idx)
         return {'pc': pc, 'label': label.item()}
+    
+class ModelNet40PtV1(Dataset):
+    def __init__(self, split, train_data_path,
+                 valid_data_path, test_data_path, num_points=1024):
+        self.split = split
+        self.data_path = {
+            "train": train_data_path,
+            "valid": valid_data_path,
+            "test":  test_data_path
+        }[self.split]
+
+        ptv1_params = {
+            'split': split,
+            'npoint': num_points,
+            "data_path":  self.data_path
+        }
+        self.dataset = ptv1_ModelNet40(**ptv1_params)
+
+    def __len__(self):
+        return self.dataset.__len__()
+
+    def __getitem__(self, idx):
+        pc, label = self.dataset.__getitem__(idx)
+        return {'pc': pc, 'label': label.item()}
+    
+def get_kp_conv_dataloader(split, train_data_path, valid_data_path, test_data_path):
+    data_path = None
+    if split == 'train':
+        data_path = train_data_path
+    elif split == 'valid':
+        data_path = valid_data_path
+    elif split == 'test':
+        data_path = test_data_path
+    
+    return kpconv_ModelNet40_dataloader(split, data_path)
 
 def load_data(data_path,corruption,severity):
 
@@ -195,6 +231,12 @@ def create_dataloader(split, cfg):
     elif cfg.EXP.DATASET == "modelnet40_dgcnn":
         dataset_args.update(dict(**cfg.DATALOADER.MODELNET40_DGCNN))
         dataset = ModelNet40Dgcnn(**dataset_args)
+    elif cfg.EXP.DATASET == "modelnet40_ptv1":
+        dataset_args.update(dict(**cfg.DATALOADER.MODELNET40_PTV1))
+        dataset = ModelNet40PtV1(**dataset_args)
+    elif cfg.EXP.DATASET == "modelnet40_kpconv":
+        dataset_args.update(dict(**cfg.DATALOADER.MODELNET40_KPCONV))
+        dataset = ModelNet40PtV1(**dataset_args)
     elif cfg.EXP.DATASET == "modelnet40_c":
         dataset_args.update(dict(**cfg.DATALOADER.MODELNET40_C))
         dataset = ModelNet40C(**dataset_args)
@@ -204,6 +246,8 @@ def create_dataloader(split, cfg):
     if "batch_proc" not in dir(dataset):
         dataset.batch_proc = None
 
+    if cfg.EXP.DATASET == "modelnet40_kpconv":
+        return get_kp_conv_dataloader(**dataset_args)
     return DataLoader(
         dataset,
         batch_size,
