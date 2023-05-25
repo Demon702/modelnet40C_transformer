@@ -1,0 +1,10 @@
+DATALOADER:
+  batch_size: 16
+  num_workers: 0
+EXP:
+  DATASET: modelnet40_ptv1
+  EXP_ID: ptv1_test_clean
+  LOSS_NAME: cross_entropy
+  MODEL_NAME: ptv1
+  SEED: 1
+  TASK: cls

@@ -332,12 +332,13 @@ def rsmix(data, cfg, n_sample=512, KNN=False):
 
 def pgd(data_batch,model, task, loss_name, dataset_name, step= 7, eps=0.05, alpha=0.01):
     model.eval()
-    data = data_batch['pc']
+    data = data_batch['pc'].cuda()
     adv_data=data.clone()
     adv_data=adv_data+(torch.rand_like(adv_data)*eps*2-eps)
     adv_data.detach()
     adv_data_batch = {}
 
+    adv_data = adv_data.cuda()
     for _ in range(step):
         adv_data.requires_grad=True
         out = model(**{'pc':adv_data})
@@ -352,5 +353,5 @@ def pgd(data_batch,model, task, loss_name, dataset_name, step= 7, eps=0.05, alph
             # print(delta)
             delta = torch.clamp(delta,-eps,eps)
             adv_data = (data+delta).detach_()
-    
+    adv_data_batch['pc'] = adv_data_batch['pc'].type(torch.FloatTensor)
     return adv_data_batch
