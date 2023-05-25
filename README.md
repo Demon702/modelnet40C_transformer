@@ -1,7 +1,7 @@
 ## ModelNet40-C integration of Point Transformer
 
 To install the necessary requirements, run the following command from the root folder.
-`pip -r requirements.txt`
+`pip install -r requirements.txt`
 
 Download the trained checkpoints from the following google drive [link](https://drive.google.com/drive/folders/1C4lgDFtn4yJxlH0FbGsx6PLh-30R5b8F?usp=sharing).
 
